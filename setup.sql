@@ -1,4 +1,4 @@
--- Run in Supabase SQL editor once.
+-- Run in Supabase SQL editor. Idempotent — safe to re-run.
 
 -- 1) Storage bucket (public so screenshot URLs work without auth).
 insert into storage.buckets (id, name, public)
@@ -11,15 +11,21 @@ create table if not exists serp_runs (
   run_id         text not null,
   point_index    int  not null,
   keyword        text not null,
-  lat            double precision not null,
-  lng            double precision not null,
+  lat            double precision,
+  lng            double precision,
   device         text not null default 'mobile',
   gl             text not null default 'us',
+  label          text,
   organic_top    jsonb,
   local_pack     jsonb,
   screenshot_url text,
   created_at     timestamptz not null default now()
 );
+
+-- 2a) Migrations for existing installs.
+alter table serp_runs add column if not exists label text;
+alter table serp_runs alter column lat drop not null;
+alter table serp_runs alter column lng drop not null;
 
 create index if not exists serp_runs_run_id_idx
   on serp_runs (run_id);
